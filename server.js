@@ -1,22 +1,44 @@
-const express = require('express');
-const fetchAndWritePhotos = require('./api/unsplashapi');
 require('dotenv').config();
-
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const openai = require('openai');
+const unsplash = require('./api/unsplash');
+const axios = require('axios');
 
 const app = express();
 
-app.get('/photos/:city', async (req, res) => {
-  try {
-    const city = req.params.city;
-    const photos = await fetchAndWritePhotos(city);
-    res.json(photos);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
-  }
+app.use(cors());
+app.use(bodyParser.json());
+
+openai.apiKey = process.env.OPENAI_API_KEY;
+
+app.post('/api/chat', async (req, res) => {
+    try {
+        const prompt = req.body.prompt;
+        const max_tokens = req.body.max_tokens;
+
+        const response = await openai.Completion.create({
+            engine: 'text-davinci-003',
+            prompt: prompt,
+            max_tokens: max_tokens,
+        });
+
+        res.json(response.data.choices[0].text);
+    } catch (error) {
+        res.status(500).json({ error: error.toString() });
+    }
 });
 
-const PORT = process.env.PORT || 3000;
+app.get('/api/images', async (req, res) => {
+    try {
+        const query = req.query.query;
+        const images = await unsplash.searchPhotos(query);
+        res.json(images);
+    } catch (error) {
+        res.status(500).json({ error: error.toString() });
+    }
+});
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
+const port = process.env.PORT || 5000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
