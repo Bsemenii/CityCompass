@@ -5,26 +5,23 @@ const bodyParser = require('body-parser');
 const openai = require('openai');
 const unsplash = require('./api/unsplash');
 const axios = require('axios');
+const chatgptapi = require('./api/chatgptapi');
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 
-openai.apiKey = process.env.OPENAI_API_KEY;
 
 app.post('/api/chat', async (req, res) => {
     try {
+        const userToken = req.body.token;
         const prompt = req.body.prompt;
         const max_tokens = req.body.max_tokens;
 
-        const response = await openai.Completion.create({
-            engine: 'text-davinci-003',
-            prompt: prompt,
-            max_tokens: max_tokens,
-        });
+        const response = await chatgptapi.generateTour(userToken, prompt, max_tokens);
 
-        res.json(response.data.choices[0].text);
+        res.json(response);
     } catch (error) {
         res.status(500).json({ error: error.toString() });
     }

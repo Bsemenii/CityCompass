@@ -1,14 +1,13 @@
 const { Configuration, OpenAIApi } = require("openai");
-require('dotenv').config();
 
 
-const config = new Configuration({
-	apiKey: process.env.OPENAI_API_KEY,
-});
+const config = new Configuration();
 
-const openai = new OpenAIApi(config);
+const generateTour = async (userToken, country, city, preferences) => {
+	config.apiKey = userToken; // Используем переданный токен как API-ключ
 
-const generateTour = async (country, city, preferences) => {
+    const openai = new OpenAIApi(config);
+
 	const prompt = `
         Generate a tour guide for ${country}, ${city} with a preference for ${preferences}. Return response in the following parsable JSON format:
 
